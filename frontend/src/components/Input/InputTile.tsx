@@ -4,7 +4,7 @@ export function InputTile({ tileData }: { tileData: InputTileData }) {
 
     const guessColors = {
         'correct': "bg-green-200",
-        'wrong': "bg-gray-200",
+        'wrong': "bg-gray-400",
         'improperPlace': "bg-yellow-200",
         'notSet': "bg-white"
     }

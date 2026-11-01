@@ -1,0 +1,26 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Khaled Eldesoukey", email = "54212167+ImmortalBoi@users.noreply.github.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi[standard]>=0.162.0",
+    "httpx",
+    "pytest",
+]
+
+[project.scripts]
+backend = "app.main:app"  # Pointing this to your FastAPI app just in case
+
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14.0"]
+build-backend = "uv_build"
+
+# 👇 Tell uv_build that your code lives in the "app" folder at the root
+[tool.uv.build-backend]
+module-name = "app"
+module-root = ""

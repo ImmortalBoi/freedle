@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import type { GuessValidity, InputBoxData, InputGroupData, InputTileData } from "./types";
 import InputBox from "./InputBox";
+import { api } from "../../services/api";
 
-function InputGroup({SelectedWord} : {SelectedWord : string}) {
+function InputGroup() {
     const [inputGroupData, setInputGroupData] = useState<InputGroupData>({
         listeningIdx: 0,
-        inputBoxArray: Array.from({ length: 5 }, (): InputBoxData => ({
+        inputBoxArray: Array.from({ length: 6 }, (): InputBoxData => ({
             localListeningIdx: 0,
             inputTileArray: Array.from({ length: 5 }, (): InputTileData => ({
                 innerText: '',
@@ -23,7 +24,7 @@ function InputGroup({SelectedWord} : {SelectedWord : string}) {
             if (!e.code) return;
 
             const currentState = stateRef.current;
-            
+
             if (e.code == "Backspace") {
                 // console.log("Backspace Entered")
 
@@ -52,42 +53,59 @@ function InputGroup({SelectedWord} : {SelectedWord : string}) {
             // Check if enter is pressed
             else if (e.code == "Enter") {
                 // Check if the last input has been entered
-                if (currentState.inputBoxArray[inputGroupData.listeningIdx].localListeningIdx == 5) {
+                if (currentState.inputBoxArray[currentState.listeningIdx].localListeningIdx == 5) {
                     // console.log("Enter accepted")
+                    const currentBox = currentState.inputBoxArray[currentState.listeningIdx];
 
-                    // Verify the guess
-                    setInputGroupData((prevData) => {
-                        // Clone the old the data
-                        const newInputGroupData: InputGroupData = {
-                            listeningIdx: prevData.listeningIdx + 1,
-                            inputBoxArray: prevData.inputBoxArray.map((box, bIdx) => {
-                                if (bIdx !== prevData.listeningIdx) return box;
-                                return {
-                                    ...box,
-                                    inputTileArray: box.inputTileArray.map((tile, tIdx) => {
-                                        // TODO: when using the api this logic should not be here, and the api will decide if it's true or not
-                                        var guessValidity: GuessValidity = 'notSet'
-                                        if (tile.innerText == SelectedWord[tIdx]) {
-                                            guessValidity = 'correct'
-                                        }
-                                        else if (SelectedWord.includes(tile.innerText)) {
-                                            guessValidity = 'improperPlace'
-                                        }
-                                        else {
-                                            guessValidity = "wrong"
-                                        }
+                    const guessedWord = currentBox.inputTileArray
+                        .map((tile) => tile.innerText)
+                        .join('');
 
-                                        return {
-                                            ...tile,
-                                            guess: guessValidity
-                                        };
-                                    })
-                                };
-                            })
-                        };
+                    console.log("Submitted Word:", guessedWord);
+                    api.get(`/guess/${guessedWord}`).then((response) => {
+                        console.log(response.data)
+                        // Verify the guess
+                        setInputGroupData((prevData) => {
+                            // Clone the old the data
+                            const newInputGroupData: InputGroupData = {
+                                listeningIdx: prevData.listeningIdx + 1,
+                                inputBoxArray: prevData.inputBoxArray.map((box, bIdx) => {
+                                    if (bIdx !== prevData.listeningIdx) return box;
+                                    return {
+                                        ...box,
+                                        inputTileArray: box.inputTileArray.map((tile, tIdx) => {
+                                            // TODO: when using the api this logic should not be here, and the api will decide if it's true or not
+                                            if (response.data["guess_result"][tIdx] == "correct") {
+                                                return {
+                                                    ...tile,
+                                                    guess: 'correct'
+                                                };
+                                            }
+                                            else if (response.data["guess_result"][tIdx] == "improper") {
+                                                return {
+                                                    ...tile,
+                                                    guess: 'improperPlace'
+                                                };
+                                            }
+                                            else {
 
-                        return newInputGroupData;
+                                                return {
+                                                    ...tile,
+                                                    guess: 'wrong'
+                                                };
+                                            }
+
+                                        })
+                                    };
+                                })
+                            };
+
+                            return newInputGroupData;
+                        });
+                    }).catch((error) => {
+                        console.error("Error submitting guess:", error);
                     });
+
                 }
                 else {
                     // TODO: do a little animation shake
@@ -100,7 +118,7 @@ function InputGroup({SelectedWord} : {SelectedWord : string}) {
             // Check if a keyboard alphabet key is pressed
             else if (e.code.includes("Key")) {
                 // Check if all letters are pressed
-                if (currentState.inputBoxArray[inputGroupData.listeningIdx].localListeningIdx >= 5){
+                if (currentState.inputBoxArray[currentState.listeningIdx].localListeningIdx >= 5) {
                     return;
                 }
 
@@ -146,9 +164,6 @@ function InputGroup({SelectedWord} : {SelectedWord : string}) {
     return (
 
         <div className="flex flex-col gap-4 justify-center items-center">
-            <div>
-                Selected Word: {SelectedWord}
-            </div>
             <div
                 className="flex flex-col gap-4"
             >
