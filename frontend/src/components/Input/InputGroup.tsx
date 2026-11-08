@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { GuessValidity, InputBoxData, InputGroupData, InputTileData } from "./types";
+import type { InputBoxData, InputGroupData, InputTileData } from "./types";
 import InputBox from "./InputBox";
 import { api } from "../../services/api";
 
